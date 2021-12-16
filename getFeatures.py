@@ -16,21 +16,19 @@ import sys
 
 def read_params(fname):
     params = {}
-    fR = open(fname, 'r')
-    for line in fR:
-        print (line.strip())
-        key, val = line.strip().split('=')
-        key = str(key.strip())
-        val = str(val.strip())
-        if key == 'select_arch' or key == 'select_nets':
-            params[key] = map(int, val.strip('[]').split(','))
-        else:
-            params[key] = str(val)
-    print ("###############################################################")
-    print
-    print
-    fR.close()
-
+    with open(fname, 'r') as fR:
+        for line in fR:
+            print (line.strip())
+            key, val = line.strip().split('=')
+            key = str(key.strip())
+            val = str(val.strip())
+            if key in {'select_arch', 'select_nets'}:
+                params[key] = map(int, val.strip('[]').split(','))
+            else:
+                params[key] = str(val)
+        print ("###############################################################")
+        print
+        print
     return params
 
 
@@ -53,7 +51,7 @@ def build_model(X, input_dims, arch, nf=0.5, std=1.0, mtype='mda', epochs=80, ba
             X_test.append(Xs[jj+1])
         X_train_noisy = list(X_train)
         X_test_noisy = list(X_test)
-        for ii in range(0, len(X_train)):
+        for ii in range(len(X_train)):
             X_train_noisy[ii] = X_train_noisy[ii] + noise_factor*np.random.normal(loc=0.0, scale=std, size=X_train[ii].shape)
             X_test_noisy[ii] = X_test_noisy[ii] + noise_factor*np.random.normal(loc=0.0, scale=std, size=X_test[ii].shape)
             X_train_noisy[ii] = np.clip(X_train_noisy[ii], 0, 1)
@@ -97,9 +95,7 @@ alpha = params['alpha']  # propagation parameter
 
 
 # all possible combinations for architectures
-arch = {}
-arch['mda'] = {}
-arch['mda']['drug'] = {}
+arch = {'mda': {'drug': {}}}
 arch['mda']['drug'] = {1: [9*100],
                         2: [9*1000, 9*100, 9*1000],
                         3: [9*1000, 9*500, 9*100, 9*500, 9*1000],
@@ -107,12 +103,13 @@ arch['mda']['drug'] = {1: [9*100],
                         5: [9*1000, 9*800, 9*500, 9*200, 9*100, 9*200, 9*500, 9*800, 9*1000],
                         }
 
-arch['ae'] = {}
-arch['ae']['drug'] = {}
-arch['ae']['drug'] = {1: [1000],
-                       2: [2000, 1000, 2000],
-                       3: [2000, 1500, 1000, 1500, 2000],
-                       }
+arch['ae'] = {
+    'drug': {
+        1: [1000],
+        2: [2000, 1000, 2000],
+        3: [2000, 1500, 1000, 1500, 2000],
+    }
+}
 
 # load PPMI matrices
 Nets = []
