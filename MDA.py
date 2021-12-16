@@ -11,7 +11,7 @@ def build_AE(input_dim, encoding_dims):
     # input layer
     input_layer = Input(shape=(input_dim, ))
     hidden_layer = input_layer
-    for i in range(0, len(encoding_dims)):
+    for i in range(len(encoding_dims)):
         # generate hidden layer
         if i == len(encoding_dims)/2:
             hidden_layer = Dense(encoding_dims[i],
@@ -41,16 +41,16 @@ def build_MDA(input_dims, encoding_dims):
     Function for building multimodal autoencoder.
     """
     # input layers
-    input_layers = []
-    for dim in input_dims:
-        input_layers.append(Input(shape=(dim, )))
-
+    input_layers = [Input(shape=(dim, )) for dim in input_dims]
     # hidden layers
-    hidden_layers = []
-    for j in range(0, len(input_dims)):
-        hidden_layers.append(Dense(encoding_dims[0]/len(input_dims),
-                                   # activity_regularizer=regularizers.l1(gamma[j]),
-                                   activation='sigmoid')(input_layers[j]))
+    hidden_layers = [
+        Dense(
+            encoding_dims[0] / len(input_dims),
+            # activity_regularizer=regularizers.l1(gamma[j]),
+            activation='sigmoid',
+        )(input_layers[j])
+        for j in range(len(input_dims))
+    ]
 
     # Concatenate layers
     if len(encoding_dims) == 1:
@@ -76,15 +76,18 @@ def build_MDA(input_dims, encoding_dims):
                              activation='sigmoid')(hidden_layer)
 
     # hidden layers
-    hidden_layers = []
-    for j in range(0, len(input_dims)):
-        hidden_layers.append(Dense(encoding_dims[-1]/len(input_dims),
-                                   activation='sigmoid')(hidden_layer))
+    hidden_layers = [
+        Dense(encoding_dims[-1] / len(input_dims), activation='sigmoid')(
+            hidden_layer
+        )
+        for _ in range(len(input_dims))
+    ]
+
     # output layers
-    output_layers = []
-    for j in range(0, len(input_dims)):
-        output_layers.append(Dense(input_dims[j],
-                                   activation='sigmoid')(hidden_layers[j]))
+    output_layers = [
+        Dense(input_dims[j], activation='sigmoid')(hidden_layers[j])
+        for j in range(len(input_dims))
+    ]
 
     # autoencoder model
     sgd = SGD(lr=0.01, momentum=0.9, decay=0.0, nesterov=False)
@@ -100,29 +103,30 @@ def build_MDA2(input_dims, encoding_dims):
     Function for building mixed multimodal autoencoder.
     """
     # input layers
-    input_layers = []
-    for dim in input_dims:
-        input_layers.append(Input(shape=(dim, )))
-
+    input_layers = [Input(shape=(dim, )) for dim in input_dims]
     # ENCODER
 
     # hidden layer
     hidden_layers = input_layers
-    for i in range(0, len(encoding_dims)-1):
+    for i in range(len(encoding_dims)-1):
         tmp_layers = []
         if isinstance(encoding_dims[i], list) and isinstance(encoding_dims[i+1], int):
-            tmp1_layers = []
-            for j in range(0, len(encoding_dims[i])):
-                tmp1_layers.append(Dense(encoding_dims[i][j],
-                                         # kernel_initializer='random_uniform',
-                                         activation='sigmoid')(hidden_layers[j]))
+            tmp1_layers = [
+                Dense(
+                    encoding_dims[i][j],
+                    # kernel_initializer='random_uniform',
+                    activation='sigmoid',
+                )(hidden_layers[j])
+                for j in range(len(encoding_dims[i]))
+            ]
+
             tmp_layers.append(concatenate(tmp1_layers))
         elif isinstance(encoding_dims[i], int):
             tmp_layers.append(Dense(encoding_dims[i],
                                     # kernel_initializer='random_uniform',
                                     activation='sigmoid')(hidden_layers[0]))
         else:
-            for j in range(0, len(encoding_dims[i])):
+            for j in range(len(encoding_dims[i])):
                 tmp_layers.append(Dense(encoding_dims[i][j],
                                         # kernel_initializer='random_uniform',
                                         # activity_regularizer=regularizers.l1(0.0001),
@@ -151,23 +155,26 @@ def build_MDA2(input_dims, encoding_dims):
             tmp = Dense(sum(encoding_dims[-i]),
                         # kernel_initializer='random_uniform',
                         activation='sigmoid')(hidden_layers[0])
-            for j in range(0, len(encoding_dims[-i])):
+            for j in range(len(encoding_dims[-i])):
                 tmp_layers.append(Dense(encoding_dims[-i][j],
                                         # kernel_initializer='random_uniform',
                                         activation='sigmoid')(tmp))
         else:
-            for j in range(0, len(encoding_dims[-i])):
+            for j in range(len(encoding_dims[-i])):
                 tmp_layers.append(Dense(encoding_dims[-i][j],
                                         # kernel_initializer='random_uniform',
                                         activation='sigmoid')(hidden_layers[j]))
         hidden_layers = tmp_layers
 
     # output layers
-    output_layers = []
-    for j in range(0, len(input_dims)):
-        output_layers.append(Dense(input_dims[j],
-                                   # kernel_initializer='random_uniform',
-                                   activation='sigmoid')(hidden_layers[j]))
+    output_layers = [
+        Dense(
+            input_dims[j],
+            # kernel_initializer='random_uniform',
+            activation='sigmoid',
+        )(hidden_layers[j])
+        for j in range(len(input_dims))
+    ]
 
     # autoencoder model
     sgd = SGD(lr=0.01, momentum=0.9, decay=0.0, nesterov=False)

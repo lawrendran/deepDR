@@ -27,8 +27,10 @@ def Guassian_loss(recon_x, x):
 
 def BCE_loss(recon_x, x):
     eps = 1e-8
-    loss = -torch.sum(args.alpha * torch.log(recon_x + eps) * x + torch.log(1 - recon_x + eps) * (1 - x))
-    return loss
+    return -torch.sum(
+        args.alpha * torch.log(recon_x + eps) * x
+        + torch.log(1 - recon_x + eps) * (1 - x)
+    )
 
 
 def train(epoch):
